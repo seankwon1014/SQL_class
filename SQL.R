@@ -6,6 +6,7 @@ con <- dbConnect(drv, dbname = 'loan',
                  host = 's19db.apan5310.com', port = 50102,
                  user = 'postgres', password = 'a3acvk9r')
 
+###### Extract
 # create tables
 stmt <- "
 create table purchaser(
@@ -179,7 +180,7 @@ action_taken_name     varchar(100)
 dbGetQuery(con,stmt)
 dbWriteTable(con, name="raw_data", value=df, row.names=FALSE, append=TRUE)
 
-
+###### Transform
 # transform data 1: Add 'loan_id' into the 'raw_data' table
 stmt <- "
 ALTER TABLE raw_data
@@ -222,6 +223,7 @@ from raw_data_data;
 dbGetQuery(con,stmt)
 
 
+###### Load
 # insert data
 stmt <- "
 insert into respondent(respondent_real_id)
