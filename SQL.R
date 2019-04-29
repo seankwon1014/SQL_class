@@ -6,7 +6,7 @@ con <- dbConnect(drv, dbname = 'loan',
                  host = 's19db.apan5310.com', port = 50102,
                  user = 'postgres', password = 'a3acvk9r')
 
-###### Extract
+##### EXTRACT
 # create tables
 stmt <- "
 create table purchaser(
@@ -75,8 +75,7 @@ preapproval_id 		serial PRIMARY KEY,
 preapproval_name	varchar(100));
 
 CREATE TABLE respondent(
-respondent_id 		serial PRIMARY KEY,
-respondent_real_id	varchar(50));
+respondent_id	varchar(50) primary key);
 
 CREATE TABLE loan(
 loan_id		integer,
@@ -97,6 +96,7 @@ applicant_id integer,
 co_applicant_id integer,
 primary key (loan_id),
 foreign key (preapproval_id) references preapproval(preapproval_id),
+foreign key (respondent_id) references respondent(respondent_id),
 foreign key (loan_type_id) references loan_type(loan_type_id),
 foreign key (loan_purpose_id) references loan_purpose(loan_purpose_id),
 foreign key (lien_status_id) references lien_status(lien_status_id),
@@ -180,7 +180,8 @@ action_taken_name     varchar(100)
 dbGetQuery(con,stmt)
 dbWriteTable(con, name="raw_data", value=df, row.names=FALSE, append=TRUE)
 
-###### Transform
+
+##### TRANSFORM
 # transform data 1: Add 'loan_id' into the 'raw_data' table
 stmt <- "
 ALTER TABLE raw_data
@@ -223,10 +224,10 @@ from raw_data_data;
 dbGetQuery(con,stmt)
 
 
-###### Load
+##### LOAD
 # insert data
 stmt <- "
-insert into respondent(respondent_real_id)
+insert into respondent(respondent_id)
 select respondent_id
 from raw_data_data
 group by respondent_id;
@@ -311,7 +312,7 @@ pt.property_type_id, pu.purchaser_type_id, oo.owner_occupancy_id, a.agency_id, a
 from raw_data_data r, preapproval p, loan_type lt, loan_purpose lp, lien_status ls, action_taken at, respondent rp,
 property_type pt, purchaser pu, owner_occupancy oo,  agency a, applicant ap, applicant cp, census_tract ct
 where r.preapproval_name = p.preapproval_name AND
-r.respondent_id = rp.respondent_real_id AND
+r.respondent_id = rp.respondent_id AND
 r.loan_type_name = lt.loan_type_name AND
 r.loan_purpose_name = lp.loan_purpose_name AND
 r.lien_status_name = ls.lien_status_name AND
